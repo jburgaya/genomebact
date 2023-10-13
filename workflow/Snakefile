@@ -1,0 +1,48 @@
+from snakemake.utils import validate
+import pandas as pd
+import os
+
+# ----- load config file ----- #
+
+configfile: "config/config.yaml"
+
+# ----- define functions ----- #
+def _read_R1(indir, extension='_1.fastq.gz'):
+    return {os.path.join(indir, x) for x in os.listdir(indir) if x.endswith(extension)}
+
+def _read_R2(indir, extension='_2.fastq.gz'):
+    return {os.path.join(indir, x) for x in os.listdir(indir) if x.endswith(extension)}
+
+def _read_file_names(indir, extension='_1.fastq.gz'):
+  return {x.split(extension)[0] for x in os.listdir(indir) if x.endswith(extension)}
+
+# ----- params ----- #
+samples = list(_read_file_names("/home/burgaya/Desktop/genomebact/data/reads/", extension='_1.fastq.gz'))
+
+# ----- start execution of the rules ----- #
+# mkdir fastp/reads and fastp/reports before
+
+print(samples)
+
+rule fastp:
+    input:
+        expand("/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_1.fastq.gz", sample=samples),
+        expand("/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_2.fastq.gz", sample=samples),
+        expand("/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.json", sample=samples),
+        expand("/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.html", sample=samples)
+
+rule run_fastp:
+    input:
+        R1=lambda wildcards: "/home/burgaya/Desktop/genomebact/data/reads/{sample}_1.fastq.gz",
+        R2=lambda wildcards: "/home/burgaya/Desktop/genomebact/data/reads/{sample}_2.fastq.gz"
+    output:
+        r1="/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
+        r2="/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_2.fastq.gz",
+        json="/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.json",
+        html="/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.html"
+    threads: 2
+    conda: "envs/fastp.yaml"
+    shell:
+        """
+        fastp -i {input.R1} -I {input.R2} -o {output.r1} -O {output.r2} -j {output.json} -h {output.html}
+        """

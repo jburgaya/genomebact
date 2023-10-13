@@ -1,0 +1,5 @@
+#----- inputs -----#
+
+reads: "data/reads/"
+
+#----- outputs -----#
