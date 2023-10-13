@@ -4,7 +4,7 @@ A pipeline for bacterial assembly and annotation
 Test set: 40 E. coli reads
 
 | **xx** | **Rule** | **Description** |
-| ------------- | ------------- |
+| ------------- | ------------- | ------------- |
 | trim, qc reads | fastp/run_fastp |  |
 | assembly | assembly/run_assembly | shovill (using spades) |
 |  | fast_assembly/run_fast_assembly | skesa |
