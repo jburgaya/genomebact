@@ -18,27 +18,27 @@ def _read_file_names(indir, extension='_1.fastq.gz'):
   return {x.split(extension)[0] for x in os.listdir(indir) if x.endswith(extension)}
 
 # ----- params ----- #
-samples = list(_read_file_names("/big-storage/judit/genomebact/data/reads/", extension='_1.fastq.gz'))
+samples = list(_read_file_names("data/reads/", extension='_1.fastq.gz'))
 print(samples)
 
 # ----- start execution of the rules ----- #
 
 rule fastp:
     input:
-        expand("/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz", sample=samples),
-        expand("/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz", sample=samples),
-        expand("/big-storage/judit/genomebact/out/fastp/reports/{sample}.json", sample=samples),
-        expand("/big-storage/judit/genomebact/out/fastp/reports/{sample}.html", sample=samples)
+        expand("out/fastp/reads/{sample}_1.fastq.gz", sample=samples),
+        expand("out/fastp/reads/{sample}_2.fastq.gz", sample=samples),
+        expand("out/fastp/reports/{sample}.json", sample=samples),
+        expand("out/fastp/reports/{sample}.html", sample=samples)
 
 rule run_fastp:
     input:
-        R1=lambda wildcards: "/big-storage/judit/genomebact/data/reads/{sample}_1.fastq.gz",
-        R2=lambda wildcards: "/big-storage/judit/genomebact/data/reads/{sample}_2.fastq.gz"
+        R1=lambda wildcards: "data/reads/{sample}_1.fastq.gz",
+        R2=lambda wildcards: "data/reads/{sample}_2.fastq.gz"
     output:
-        r1="/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
-        r2="/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz",
-        json="/big-storage/judit/genomebact/out/fastp/reports/{sample}.json",
-        html="/big-storage/judit/genomebact/out/fastp/reports/{sample}.html"
+        r1="out/fastp/reads/{sample}_1.fastq.gz",
+        r2="out/fastp/reads/{sample}_2.fastq.gz",
+        json="out/fastp/reports/{sample}.json",
+        html="out/fastp/reports/{sample}.html"
     threads: 2
     conda: "envs/fastp.yaml"
     shell:
@@ -48,14 +48,14 @@ rule run_fastp:
 
 rule assembly:
     input:
-        expand("/big-storage/judit/genomebact/out/shovill/{sample}", sample=samples)
+        expand("out/shovill/{sample}", sample=samples)
 
 rule run_assembly:
     input:
-        r1=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
-        r2=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz"
+        r1=lambda wildcards: "out/fastp/reads/{sample}_1.fastq.gz",
+        r2=lambda wildcards: "out/fastp/reads/{sample}_2.fastq.gz"
     output:
-        fasta=directory("/big-storage/judit/genomebact/out/shovill/{sample}")
+        fasta=directory("out/shovill/{sample}")
     threads: 8
     conda: "envs/shovill.yaml"
     shell:
@@ -65,14 +65,14 @@ rule run_assembly:
 
 rule fast_assembly:
     input:
-        expand("/big-storage/judit/genomebact/out/skesa/{sample}.fasta", sample=samples)
+        expand("out/skesa/{sample}.fasta", sample=samples)
 
 rule run_fast_assembly:
     input:
-        r1=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
-        r2=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz" 
+        r1=lambda wildcards: "out/fastp/reads/{sample}_1.fastq.gz",
+        r2=lambda wildcards: "out/fastp/reads/{sample}_2.fastq.gz" 
     output:
-        fasta="/big-storage/judit/genomebact/out/skesa/{sample}.fasta"
+        fasta="out/skesa/{sample}.fasta"
     threads: 12
     conda: "envs/skesa.yaml"
     shell:
@@ -80,5 +80,19 @@ rule run_fast_assembly:
         skesa --cores 12 --reads {input.r1} {input.r2} --contigs_out {output}
         """
 
+# check quast directory miniconda
 rule quast:
-    input:
+    input: "out/skesa/{sample}.fasta"
+    output: "out/quast/{sample}"
+    params: 
+        contiglen=200
+    threads: 8
+    logs: "out/logs/quast.log"
+    conda: "envs/quast.yaml"
+    shell:
+        """
+        python /fast-storage/miniconda3/quast/bin/quast -o {output} -t 8 /
+        --no-plots --no-html --no-icarus --min-contig {params.contiglen} {input}
+        """
+
+
