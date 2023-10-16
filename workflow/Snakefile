@@ -1,3 +1,10 @@
+# rule fastp: trim reads
+# rule assembly
+# rule check assembly quality
+# rule remove poor assembled genomes
+# rule kraken
+# rule annotate
+
 from snakemake.utils import validate
 import pandas as pd
 import os
@@ -7,42 +14,71 @@ import os
 configfile: "config/config.yaml"
 
 # ----- define functions ----- #
-def _read_R1(indir, extension='_1.fastq.gz'):
-    return {os.path.join(indir, x) for x in os.listdir(indir) if x.endswith(extension)}
-
-def _read_R2(indir, extension='_2.fastq.gz'):
-    return {os.path.join(indir, x) for x in os.listdir(indir) if x.endswith(extension)}
-
 def _read_file_names(indir, extension='_1.fastq.gz'):
   return {x.split(extension)[0] for x in os.listdir(indir) if x.endswith(extension)}
 
 # ----- params ----- #
-samples = list(_read_file_names("/home/burgaya/Desktop/genomebact/data/reads/", extension='_1.fastq.gz'))
+samples = list(_read_file_names("/big-storage/judit/genomebact/data/reads/", extension='_1.fastq.gz'))
+print(samples)
 
 # ----- start execution of the rules ----- #
-# mkdir fastp/reads and fastp/reports before
-
-print(samples)
 
 rule fastp:
     input:
-        expand("/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_1.fastq.gz", sample=samples),
-        expand("/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_2.fastq.gz", sample=samples),
-        expand("/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.json", sample=samples),
-        expand("/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.html", sample=samples)
+        expand("/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz", sample=samples),
+        expand("/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz", sample=samples),
+        expand("/big-storage/judit/genomebact/out/fastp/reports/{sample}.json", sample=samples),
+        expand("/big-storage/judit/genomebact/out/fastp/reports/{sample}.html", sample=samples)
 
 rule run_fastp:
     input:
-        R1=lambda wildcards: "/home/burgaya/Desktop/genomebact/data/reads/{sample}_1.fastq.gz",
-        R2=lambda wildcards: "/home/burgaya/Desktop/genomebact/data/reads/{sample}_2.fastq.gz"
+        R1=lambda wildcards: "/big-storage/judit/genomebact/data/reads/{sample}_1.fastq.gz",
+        R2=lambda wildcards: "/big-storage/judit/genomebact/data/reads/{sample}_2.fastq.gz"
     output:
-        r1="/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
-        r2="/home/burgaya/Desktop/genomebact/out/fastp/reads/{sample}_2.fastq.gz",
-        json="/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.json",
-        html="/home/burgaya/Desktop/genomebact/out/fastp/reports/{sample}.html"
+        r1="/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
+        r2="/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz",
+        json="/big-storage/judit/genomebact/out/fastp/reports/{sample}.json",
+        html="/big-storage/judit/genomebact/out/fastp/reports/{sample}.html"
     threads: 2
     conda: "envs/fastp.yaml"
     shell:
         """
         fastp -i {input.R1} -I {input.R2} -o {output.r1} -O {output.r2} -j {output.json} -h {output.html}
         """
+
+rule assembly:
+    input:
+        expand("/big-storage/judit/genomebact/out/shovill/{sample}", sample=samples)
+
+rule run_assembly:
+    input:
+        r1=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
+        r2=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz"
+    output:
+        fasta=directory("/big-storage/judit/genomebact/out/shovill/{sample}")
+    threads: 8
+    conda: "envs/shovill.yaml"
+    shell:
+        """
+        shovill --outdir {output} --R1 {input.r1} --R2 {input.r2} --tmpdir "/tmp/"
+        """
+
+rule fast_assembly:
+    input:
+        expand("/big-storage/judit/genomebact/out/skesa/{sample}.fasta", sample=samples)
+
+rule run_fast_assembly:
+    input:
+        r1=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_1.fastq.gz",
+        r2=lambda wildcards: "/big-storage/judit/genomebact/out/fastp/reads/{sample}_2.fastq.gz" 
+    output:
+        fasta="/big-storage/judit/genomebact/out/skesa/{sample}.fasta"
+    threads: 12
+    conda: "envs/skesa.yaml"
+    shell:
+        """
+        skesa --cores 12 --reads {input.r1} {input.r2} --contigs_out {output}
+        """
+
+rule quast:
+    input:
