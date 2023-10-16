@@ -2,11 +2,9 @@
 
 A pipeline for bacterial assembly and annotation
 
-## test set
+## Rules
 
 Test set: 40 E. coli reads
-
-## Rules
 
 | **xx** | **Rule** | **Description** |
 | ------------- | ------------- | ------------- |
