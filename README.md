@@ -23,3 +23,6 @@ To make a dry run of the analyis:
 snakemake --use-conda --cores 36 -n -p
 ```
 Snakemake will install the appropriate packages for each step as conda environments when running it without the `-n` flag.
+
+## Author
+Judit Burgaya (BurgayaVentura.Judit@mh-hannover.de | judit.burgaya@gmail.com)
