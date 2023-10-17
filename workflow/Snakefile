@@ -80,6 +80,8 @@ rule run_fast_assembly:
         skesa --cores 12 --reads {input.r1} {input.r2} --contigs_out {output}
         """
 
+# check quast directory miniconda
+# there's some bug need to be looked at
 rule quast:
     input:
         expand("out/quast/{sample}", sample=samples)
@@ -95,5 +97,21 @@ rule run_quast:
         python /fast-storage/miniconda3/envs/quast/bin/quast -o {output} -t 8 /
         --no-plots --no-html --no-icarus {input}
         """
+
+# add rule removing outliers from quast output
+
+rule prepare_ggcaller:
+  output: "out/ggcaller_input.txt"
+  shell:
+        "ls -d -1 $PWD/out/skesa/*.fasta > {output}"
+
+rule annotate:
+    input: "out/ggcaller_input.txt"
+    output: "out/ggcaller"
+    threads: 8
+    log: "out/logs/ggcaller.log"
+    conda: "envs/ggcaller.yaml"
+    shell:
+        "ggcaller --refs {input} --annotation fast --aligner def --alignment core --clean-mode strict --threads 8 --out {output}"
 
 
