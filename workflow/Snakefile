@@ -98,11 +98,7 @@ rule run_quast:
         --no-plots --no-html --no-icarus {input}
         """
 
-<<<<<<< HEAD
-# add rule to create ggcaller input
-=======
 # add rule removing outliers from quast output
->>>>>>> 4643d0ac26c6a58f08b52760581888ed2088f2d0
 
 rule prepare_ggcaller:
   output: "out/ggcaller_input.txt"
@@ -115,9 +111,5 @@ rule annotate:
     threads: 8
     log: "out/logs/ggcaller.log"
     conda: "envs/ggcaller.yaml"
-<<<<<<< HEAD
-    shell: "ggcaller --refs {input} --annotation fast --aligner def --alignment core --clean-mode strict --threads 8 --out {output}"
-=======
     shell:
         "ggcaller --refs {input} --annotation fast --aligner def --alignment core --clean-mode strict --threads 8 --out {output}"
->>>>>>> 4643d0ac26c6a58f08b52760581888ed2088f2d0
