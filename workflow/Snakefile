@@ -80,19 +80,20 @@ rule run_fast_assembly:
         skesa --cores 12 --reads {input.r1} {input.r2} --contigs_out {output}
         """
 
-# check quast directory miniconda
 rule quast:
+    input:
+        expand("out/quast/{sample}", sample=samples)
+
+rule run_quast:
     input: "out/skesa/{sample}.fasta"
     output: "out/quast/{sample}"
-    params: 
-        contiglen=200
     threads: 8
-    logs: "out/logs/quast.log"
+    log: "out/logs/quast/{sample}.log"
     conda: "envs/quast.yaml"
     shell:
         """
-        python /fast-storage/miniconda3/quast/bin/quast -o {output} -t 8 /
-        --no-plots --no-html --no-icarus --min-contig {params.contiglen} {input}
+        python /fast-storage/miniconda3/envs/quast/bin/quast -o {output} -t 8 /
+        --no-plots --no-html --no-icarus {input}
         """
 
 
