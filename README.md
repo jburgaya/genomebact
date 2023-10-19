@@ -9,9 +9,11 @@ A minimal pipeline for bacterial assembly and annotation
 Test set: 40 E. coli reads
 
 **QC reads**
+
 This pipeline checks the quality of the reads and trims them using ![fastp](https://github.com/OpenGene/fastp).
 
 **Assembly**
+
 Two assemblers can be used:
 - Fast assembly: uses the fast assembler ![skesa](https://github.com/ncbi/SKESA)
 - Assmebly: uses ![shovill](https://github.com/tseemann/shovill)
@@ -19,10 +21,11 @@ Two assemblers can be used:
 Afterwards, the quality of the assemblies is checked with ![quast](https://github.com/ablab/quast), and fastas with low quality are removed.
 
 **Annotation** 
+
  The preserved fastas are annotated using ![prokka](https://github.com/tseemann/prokka).
 
 
-### **To include**, to make it less minimal :)
+### To include, to make it less minimal :)
 - [ ] run ![kraken2](https://github.com/DerrickWood/kraken2) for species identification
 - [ ] split fastas and gffs into species directories (data/ecoli/fastas & data/ecoli/gffs)
 - [ ] typing w/ ![mlst](https://github.com/tseemann/mlst)
