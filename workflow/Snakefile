@@ -107,9 +107,21 @@ rule check_quast:
         python workflow/scripts/twist_quast_output.py {input}
         """
 
-# add rule removing outliers from quast output
-# copying fasta files with good quality to data/fastas/
-# this are the fasta files to be used from here onwards
+rule filter_quast:
+    input:
+        fastasdir="out/skesa",
+        quastout="out/quast/quast_output_toremove.tsv",
+        removeddir="data/removed_fastas"
+    output:
+        "out/fastas_moved.txt"
+    shell:
+        """
+        python workflow/scripts/move_qc_fastas.py {input.fastasdir} {input.quastout} {input.removeddir}
+        """
+
+#rule kraken:
+#rule run_kraken:
+
 
 rule annotate:
     input:
