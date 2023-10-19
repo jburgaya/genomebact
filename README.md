@@ -8,16 +8,7 @@ A minimal pipeline for bacterial assembly and annotation
 
 Test set: 40 E. coli reads
 
-| **xx** | **Rule** | **Description** |
-| ------------- | ------------- | ------------- |
-| trim, qc reads | fastp/run_fastp |  |
-| assembly | assembly/run_assembly | shovill (using spades) |
-|  | fast_assembly/run_fast_assembly | skesa |
-| qc assembly | quast |  |
-| remove bad assemblies | filter.py |  |
-| check species | kraken |  |
-| sort by species | sort.py | mkdir with species name and split fastas |
-| annotate | proka |  |
+This pipeline checks the quality of the reads and trims them using *fastp*, it then assembles them using a fast assembler *skesa*. Quality of the assemblies are checked with *QUAST* and then fastas with low quality criteria are removed. Further, annotations are done using *prokka*.
 
 ## Usage
 To make a dry run of the analyis:
