@@ -21,7 +21,8 @@ Afterwards, the quality of the assemblies is checked with ![quast](https://githu
 **Annotation** 
  The preserved fastas are annotated using ![prokka](https://github.com/tseemann/prokka).
 
- **To include - to make it not so minimal :)**
+
+### **To include - to make it not so minimal :)**
 - [ ] run ![kraken2](https://github.com/DerrickWood/kraken2) for species identification
 - [ ] split fastas and gffs into species directories (data/ecoli/fastas & data/ecoli/gffs)
 - [ ] typing w/ ![mlst](https://github.com/tseemann/mlst)
