@@ -21,6 +21,9 @@ def _read_file_names(indir, extension='_1.fastq.gz'):
 samples = list(_read_file_names("data/reads/", extension='_1.fastq.gz'))
 print(samples)
 
+fastas_pass = list(_read_file_names("out/skesa/", extension='.fasta'))
+print(fastas_pass)
+
 # ----- start execution of the rules ----- #
 
 rule fastp:
@@ -122,10 +125,9 @@ rule filter_quast:
 #rule kraken:
 #rule run_kraken:
 
-
 rule annotate:
     input:
-        expand("data/gffs/{sample}.gff", sample=samples)
+        expand("data/gffs/{sample}.gff", sample=fastas_pass)
 
 rule run_annotate:
     input:
@@ -137,5 +139,4 @@ rule run_annotate:
     shell:
         """
         prokka --outdir out/prokka/{wildcards.sample} --prefix {wildcards.sample} {input.fasta}
-        cp out/prokka/{wildcards.sample}/{wildcards.sample}.gff {output}
         """
