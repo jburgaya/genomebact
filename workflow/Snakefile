@@ -80,36 +80,50 @@ rule run_fast_assembly:
         skesa --cores 12 --reads {input.r1} {input.r2} --contigs_out {output}
         """
 
-# check quast directory miniconda
-# there's some bug need to be looked at
 rule quast:
-    input:
-        expand("out/quast/{sample}", sample=samples)
+    input: expand("out/quast/{sample}", sample=samples)
 
 rule run_quast:
-    input: "out/skesa/{sample}.fasta"
-    output: "out/quast/{sample}"
-    threads: 8
+    input:
+        fasta=lambda wildcards: "out/skesa/{sample}.fasta"
+    output: directory("out/quast/{sample}")
+    threads: 2
     log: "out/logs/quast/{sample}.log"
     conda: "envs/quast.yaml"
     shell:
         """
-        python /fast-storage/miniconda3/envs/quast/bin/quast -o {output} -t 8 /
-        --no-plots --no-html --no-icarus {input}
+        quast -o {output} -t 8 --no-plots --no-html --no-icarus {input}
+        """
+
+rule check_quast:
+    input:
+        dir="out/quast"
+    output:
+        quast="out/quast/quast_output.tsv",
+        filtered="out/quast/quast_output_f.tsv",
+        removed="out/quast/quast_output_toremove.tsv"
+    shell:
+        """
+        python workflow/scripts/twist_quast_output.py {input} > {output.quast} 2> {output.filtered} 3> {output.removed}
         """
 
 # add rule removing outliers from quast output
-
-rule prepare_ggcaller:
-  output: "out/ggcaller_input.txt"
-  shell:
-        "ls -d -1 $PWD/out/skesa/*.fasta > {output}"
+# copying fasta files with good quality to data/fastas/
+# this are the fasta files to be used from here onwards
 
 rule annotate:
-    input: "out/ggcaller_input.txt"
-    output: "out/ggcaller"
-    threads: 8
-    log: "out/logs/ggcaller.log"
-    conda: "envs/ggcaller.yaml"
+    input:
+        expand("data/gffs/{sample}.gff", sample=samples)
+
+rule run_annotate:
+    input:
+        fasta="out/skesa/{sample}.fasta"
+    output: "data/gffs/{sample}.gff"
+    log: "out/logs/prokka_{sample}.log"
+    threads: 12
+    conda: "envs/prokka.yaml"
     shell:
-        "ggcaller --refs {input} --annotation fast --aligner def --alignment core --clean-mode strict --threads 8 --out {output}"
+        """
+        prokka --outdir out/prokka/{wildcards.sample} --prefix {wildcards.sample} {input.fasta}
+        cp out/prokka/{wildcards.sample}/{wildcards.sample}.gff {output}
+        """
