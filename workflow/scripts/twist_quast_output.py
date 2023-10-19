@@ -59,15 +59,16 @@ if __name__ == "__main__":
 
     # Create a DataFrame from the collected data
     df = pd.DataFrame({'sample': sample_ids, 'totallen': total_lengths, 'n50': n50_values})
+    df['totallen'] = pd.to_numeric(df['totallen'])
+    df['n50'] = pd.to_numeric(df['n50'])
 
     # conditions
-    totallen = (df[df.columns[1]] >= options.minlen) & (df[df.columns[1]] <= options.maxlen)
-    n50 = df[df.columns[2]] > options.n50
+    totallen = (df['totallen'] >= options.minlen) & (df['totallen'] <= options.maxlen)
+    n50 = df['n50'] > options.n50
 
     filterdf = df[totallen & n50]
     toremovedf = df[~(totallen & n50)]
 
-    # Save the DataFrame to an output file (e.g., output.csv)
-    df.to_csv(sys.stdout, sep='\t', index=False)
-    filterdf.to_csv(sys.stdout, sep='\t', index=False)
-    toremovedf.to_csv(sys.stdout, sep='\t', index=False)
+    df.to_csv(os.path.join(options.quastdir, 'quast_output.tsv'), sep='\t', index=False)
+    filterdf.to_csv(os.path.join(options.quastdir, 'quast_output_f.tsv'), sep='\t', index=False)
+    toremovedf.to_csv(os.path.join(options.quastdir, 'quast_output_toremove.tsv'), sep='\t', index=False)

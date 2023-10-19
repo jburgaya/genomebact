@@ -104,7 +104,7 @@ rule check_quast:
         removed="out/quast/quast_output_toremove.tsv"
     shell:
         """
-        python workflow/scripts/twist_quast_output.py {input} > {output.quast} 2> {output.filtered} 3> {output.removed}
+        python workflow/scripts/twist_quast_output.py {input}
         """
 
 # add rule removing outliers from quast output
