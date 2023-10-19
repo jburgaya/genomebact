@@ -1,6 +1,8 @@
 # genomebact
 
-A pipeline for bacterial assembly and annotation
+A minimal pipeline for bacterial assembly and annotation
+
+![GitHub Logo](config/img/logo.png)
 
 ## Rules
 
