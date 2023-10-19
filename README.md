@@ -2,7 +2,7 @@
 
 A minimal pipeline for bacterial assembly and annotation
 
-![GitHub Logo](config/img/logo.png)
+![GitHub Logo](config/img/logo.jpg)
 
 ## Rules
 
