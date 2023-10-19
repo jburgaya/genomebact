@@ -4,6 +4,17 @@ A minimal pipeline for bacterial assembly and annotation
 
 ![GitHub Logo](config/img/logo.jpg)
 
+## Usage
+
+First run the ```bootstrap.sh``` script to create all necessary directories and input files.
+
+Then, to make a dry run of the analyis:
+```
+snakemake --use-conda --cores 12 -n -p
+```
+
+Snakemake will install the appropriate packages for each step as conda environments when running it without the `-n` flag.
+
 ## Pipeline
 
 Test set: 40 E. coli reads
@@ -35,15 +46,6 @@ Afterwards, the quality of the assemblies is checked with ![quast](https://githu
 - [ ] create one single output report
 - [ ] create output viz
 
-## Usage
-First run the ```bootstrap.sh``` script to create all necessary directories and input files.
-
-Then, to make a dry run of the analyis:
-```
-snakemake --use-conda --cores 12 -n -p
-```
-
-Snakemake will install the appropriate packages for each step as conda environments when running it without the `-n` flag.
 
 ## Author
 Judit Burgaya (BurgayaVentura.Judit@mh-hannover.de | judit.burgaya@gmail.com)
