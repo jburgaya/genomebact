@@ -5,7 +5,7 @@ import shutil
 import argparse
 
 def get_options():
-    description = 'Move fastas files based on their low-quality output from twist_quast_output.py'
+    description = 'Move fastas files based on their low-quality output from twist_quast_output.py. IMPORTANT: check fasta extension and change if necessary'
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument('fastasdir',
@@ -31,16 +31,16 @@ if __name__ == "__main__":
         next(f) 
         for line in f:
             parts = line.strip().split('\t')
-            if len(parts) == 3:
+            if len(parts) >= 3:
                 sample_id = parts[0]
                 sample_id_mapping[sample_id] = os.path.join(removeddir, sample_id)
 
     # Iterate through the files in the source directory and move them based on sample ID
     for filename in os.listdir(fastasdir):
-        if filename.endswith('.fasta'):
+        if filename.endswith('.fna.gz'):
             sample_id = filename.split('.')[0] 
             if sample_id in sample_id_mapping:
-                destination_dir = sample_id_mapping[sample_id]
+                destination_dir = removeddir
                 source_path = os.path.join(fastasdir, filename)
                 destination_path = os.path.join(destination_dir, filename)
 
@@ -51,7 +51,8 @@ if __name__ == "__main__":
                 print(f"Moved {filename} to {destination_dir}")
 
     # Create the file to indicate completion
-    with open("out/fastas_moved.txt", "w") as completion_file:
+    with open("fastas_moved.txt", "w") as completion_file:
         completion_file.write("File moving completed\n")
 
     print("File moving completed.")
+
