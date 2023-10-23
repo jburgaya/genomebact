@@ -5,11 +5,11 @@ import shutil
 import argparse
 
 def get_options():
-    description = 'Move fastas files based on their low-quality output from twist_quast_output.py. IMPORTANT: check fasta extension and change if necessary'
+    description = 'Move gffs files based on their low-quality output from twist_quast_output.py. IMPORTANT: check gff extension and change if necessary'
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('fastasdir',
-                        help='Directory containing assemblies')
+    parser.add_argument('gffsdir',
+                        help='Directory containing annotations')
     parser.add_argument('toremove',
                         help='Output file from twist_quast_output.py')
     parser.add_argument('removeddir',
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     options = get_options()
 
     # You may need to convert relative paths to absolute paths based on the working directory.
-    fastasdir = os.path.abspath(options.fastasdir)
+    gffsdir = os.path.abspath(options.gffsdir)
     toremove = os.path.abspath(options.toremove)
     removeddir = os.path.abspath(options.removeddir)
 
@@ -36,12 +36,12 @@ if __name__ == "__main__":
                 sample_id_mapping[sample_id] = os.path.join(removeddir, sample_id)
 
     # Iterate through the files in the source directory and move them based on sample ID
-    for filename in os.listdir(fastasdir):
-        if filename.endswith('.fasta'):
+    for filename in os.listdir(gffsdir):
+        if filename.endswith('.gff'):
             sample_id = filename.split('.')[0] 
             if sample_id in sample_id_mapping:
                 destination_dir = removeddir
-                source_path = os.path.join(fastasdir, filename)
+                source_path = os.path.join(gffsdir, filename)
                 destination_path = os.path.join(destination_dir, filename)
 
                 os.makedirs(destination_dir, exist_ok=True)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 print(f"Moved {filename} to {destination_dir}")
 
     # Create the file to indicate completion
-    with open("out/fastas_moved.txt", "w") as completion_file:
+    with open("out/gffs_moved.txt", "w") as completion_file:
         completion_file.write("File moving completed\n")
 
     print("File moving completed.")

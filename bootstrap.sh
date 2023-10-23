@@ -4,12 +4,18 @@ set -e -o pipefail -u
 
 mkdir -p out
 mkdir -p out/logs
+mkdir -p data
 mkdir -p data/fastas
+mkdir -p data/removed_fastas
 mkdir -p data/gffs
+mkdir -p data/removed_gffs
 mkdir -p out/fastp/reads
 mkdir -p out/fastp/reports
 mkdir -p out/skesa
 mkdir -p out/shovill
+mkdir -p out/prokka
+mkdir -p out/quast
+mkdir -p out/figures
 
 # use this case when you need a file with two columns tab separated
 # echo -e "ID\tPath" > out/unitigs_input.tsv

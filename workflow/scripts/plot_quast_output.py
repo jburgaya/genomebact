@@ -16,6 +16,26 @@ def get_options():
                         help='Quast output file with all the samples quast_output.tsv')
     parser.add_argument('output_dir',
                         help='Directory to save the scatterplots')
+    parser.add_argument('--minlen',
+                        default=4500000,
+                        type=int,
+                        help='Default set to 4500000')
+    parser.add_argument('--maxlen',
+                        default=5500000,
+                        type=int,
+                        help='Default set to 5500000')
+    parser.add_argument('--n50',
+                        default=75000,
+                        type=int,
+                        help='Default set to 75000')
+    parser.add_argument('--mincds',
+                        default=5000,
+                        type=int,
+                        help='Default set to 5000')
+    parser.add_argument('--maxcds',
+                        default=7000,
+                        type=int,
+                        help='Default set to 7000')
 
     return parser.parse_args()
 
@@ -27,14 +47,14 @@ if __name__ == "__main__":
     if 'n50' in df.columns and 'cds' in df.columns and 'totallen' in df.columns:
         # Create the conditions for color assignment
         # to show the global conditions, hence the removed fastas
-        conditions = [(df['n50'] > 50000) & (df['cds'] > 5000) & (df['totallen'] > 5500000) & (df['totallen'] < 7500000) & (df['cds'] < 7500)]
+        conditions = [(df['n50'] > options.n50) & (df['cds'] > options.mincds) & (df['totallen'] > options.minlen) & (df['totallen'] < options.maxlen) & (df['cds'] < options.maxcds)]
         # to show the specific conditions per each plot
 #        conditions = [
 #            (df['n50'] > 50000) & (df['cds'] > 5000) & (df['cds'] < 7500),
 #            (df['totallen'] > 5500000) & (df['totallen'] < 7500000) & (df['cds'] > 5000) & (df['cds'] < 7500)
 #        ]
 
-	colors = ['grey', 'grey']
+        colors = ['grey', 'grey']
         default_color = 'red'
 
         # Create a new column for colors based on conditions
@@ -66,4 +86,4 @@ if __name__ == "__main__":
         plt.tight_layout()
 
     else:
-	print("The required columns ('n50', 'cds', and 'totallen') are missing in the DataFrame.")
+        print("The required columns ('n50', 'cds', and 'totallen') are missing in the DataFrame.")

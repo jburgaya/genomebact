@@ -21,9 +21,8 @@ def _read_file_names(indir, extension='_1.fastq.gz'):
 samples = list(_read_file_names("data/reads/", extension='_1.fastq.gz'))
 print(samples)
 
-fastas_pass = list(_read_file_names("out/skesa/", extension='.fasta'))
+fastas_pass = list(_read_file_names("data/fastas/", extension='.fasta'))
 print(fastas_pass)
-
 # ----- start execution of the rules ----- #
 
 rule fastp:
@@ -49,22 +48,34 @@ rule run_fastp:
         fastp -i {input.R1} -I {input.R2} -o {output.r1} -O {output.r2} -j {output.json} -h {output.html}
         """
 
-rule assembly:
-    input:
-        expand("out/shovill/{sample}", sample=samples)
+#rule assembly:
+#    input:
+#        expand("out/shovill/{sample}", sample=samples)
 
-rule run_assembly:
-    input:
-        r1=lambda wildcards: "out/fastp/reads/{sample}_1.fastq.gz",
-        r2=lambda wildcards: "out/fastp/reads/{sample}_2.fastq.gz"
-    output:
-        fasta=directory("out/shovill/{sample}")
-    threads: 8
-    conda: "envs/shovill.yaml"
-    shell:
-        """
-        shovill --outdir {output} --R1 {input.r1} --R2 {input.r2} --tmpdir "/tmp/"
-        """
+#rule run_assembly:
+#    input:
+#        r1=lambda wildcards: "out/fastp/reads/{sample}_1.fastq.gz",
+#        r2=lambda wildcards: "out/fastp/reads/{sample}_2.fastq.gz"
+#    output:
+#        outdir=directory("out/shovill/{sample}")
+#    threads: 8
+#    conda: "envs/shovill.yaml"
+#    shell:
+#        """
+#        shovill --outdir {output.outdir} --R1 {input.r1} --R2 {input.r2} --tmpdir "/tmp/"
+#        """
+
+#rule move_shovill:
+#    input:
+#        expand("data/fastas/{sample}.fasta", sample=samples)
+
+#rule run_move_shovill:
+#    input:"out/shovill/{sample}/contigs.fa"
+#    output:"data/fastas/{sample}.fasta"
+#    shell:
+#        """
+#        python workflow/scripts/twist_shovill_output.py
+#        """
 
 rule fast_assembly:
     input:
@@ -83,12 +94,52 @@ rule run_fast_assembly:
         skesa --cores 12 --reads {input.r1} {input.r2} --contigs_out {output}
         """
 
+rule move:
+    input:
+        expand("data/fastas/{sample}.fasta", sample=samples)
+
+rule run_move:
+    input:"out/skesa/{sample}.fasta"
+    output: "data/fastas/{sample}.fasta"
+    shell:
+        """
+        cp {input} {output}
+        """
+
+rule annotate:
+    input:
+        expand("out/prokka/{sample}/{sample}.gff", sample=samples)
+
+rule run_annotate:
+    input:
+        fasta="data/fastas/{sample}.fasta"
+    output: "out/prokka/{sample}/{sample}.gff"
+    log: "out/logs/prokka_{sample}.log"
+    threads: 12
+    conda: "envs/prokka.yaml"
+    shell:
+        """
+        prokka --outdir out/prokka/{wildcards.sample} --force --prefix {wildcards.sample} {input.fasta}
+        """
+
+rule move_gffs:
+    input:
+        expand("data/gffs/{sample}.gff", sample=samples)
+
+rule run_move_gffs:
+    input:"out/prokka/{sample}/{sample}.gff"
+    output: "data/gffs/{sample}.gff"
+    shell:
+        """
+        mv {input} {output}
+        """
+
 rule quast:
     input: expand("out/quast/{sample}", sample=samples)
 
 rule run_quast:
     input:
-        fasta=lambda wildcards: "out/skesa/{sample}.fasta"
+        fasta=lambda wildcards: "data/fastas/{sample}.fasta"
     output: directory("out/quast/{sample}")
     threads: 2
     log: "out/logs/quast/{sample}.log"
@@ -98,21 +149,53 @@ rule run_quast:
         quast -o {output} -t 8 --no-plots --no-html --no-icarus {input}
         """
 
-rule check_quast:
+rule count_cds:
+    input: "data/gffs"
+    output: "out/cds_counts.tsv"
+    shell:
+        """
+        python workflow/scripts/count_cds.py {input}
+        """
+
+rule check_qc:
     input:
-        dir="out/quast"
+        quastdir="out/quast",
+        cdscount="out/cds_counts.tsv"
     output:
         quast="out/quast/quast_output.tsv",
         filtered="out/quast/quast_output_f.tsv",
         removed="out/quast/quast_output_toremove.tsv"
+    params:
+        n50=50000,
+        minlen=4000000,
+        maxlen=6500000,
+        mincds=4000,
+        maxcds=5000
     shell:
         """
-        python workflow/scripts/twist_quast_output.py {input}
+        python workflow/scripts/twist_quast_output.py {input.quastdir} {input.cdscount} --n50 {params.n50} --minlen {params.minlen} --maxlen {params.maxlen} --mincds {params.mincds} --maxcds {params.maxcds}
         """
 
-rule filter_quast:
+rule plot_qc:
     input:
-        fastasdir="out/skesa",
+        quastout="out/quast/quast_output.tsv",
+        outdir="out/figures/"
+    output: "out/figures/plot_quast.png"
+    params:
+        n50=50000,
+        minlen=4000000,
+        maxlen=6500000,
+        mincds=4000,
+        maxcds=5000
+    conda: "envs/plot.yaml"
+    shell:
+        """
+        python workflow/scripts/plot_quast_output.py {input.quastout} {input.outdir} --n50 {params.n50} --minlen {params.minlen} --maxlen {params.maxlen} --mincds {params.mincds} --maxcds {params.maxcds}
+        """
+
+rule filter_fastas:
+    input:
+        fastasdir="data/fastas",
         quastout="out/quast/quast_output_toremove.tsv",
         removeddir="data/removed_fastas"
     output:
@@ -122,21 +205,14 @@ rule filter_quast:
         python workflow/scripts/move_qc_fastas.py {input.fastasdir} {input.quastout} {input.removeddir}
         """
 
-#rule kraken:
-#rule run_kraken:
-
-rule annotate:
+rule filter_gffs:
     input:
-        expand("data/gffs/{sample}.gff", sample=fastas_pass)
-
-rule run_annotate:
-    input:
-        fasta="out/skesa/{sample}.fasta"
-    output: "data/gffs/{sample}.gff"
-    log: "out/logs/prokka_{sample}.log"
-    threads: 12
-    conda: "envs/prokka.yaml"
+        gffsdir="data/gffs",
+        quastout="out/quast/quast_output_toremove.tsv",
+        removeddir="data/removed_gffs"
+    output:
+        "out/gffs_moved.txt"
     shell:
         """
-        prokka --outdir out/prokka/{wildcards.sample} --prefix {wildcards.sample} {input.fasta}
+        python workflow/scripts/move_qc_gffs.py {input.gffsdir} {input.quastout} {input.removeddir}
         """
